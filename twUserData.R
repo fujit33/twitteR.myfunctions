@@ -47,7 +47,7 @@ twUserData <- function(username,n=200){
   kataomoware <- kataomoware.count/sum.ff  # 片思われ率
 
   # 1日の平均ツイート数
-  birth.ymd <- format(user$created,"%y/%m/%d")
+  birth.ymd <- user$created
   twhistory <- difftime(Sys.time(),birth.ymd,units="days")
   twhistory.num<- as.numeric(twhistory)
   twCountOnDay <- user$statusesCount / twhistory.num
@@ -119,7 +119,7 @@ twUserData <- function(username,n=200){
   user.data <- c(user$screenName,
             user$name,
             nchar(user$description),
-            mostsource,
+            mostSource,
             user$friendsCount,
             user$followersCount,
             round(couple,2),
@@ -158,4 +158,32 @@ twUserData <- function(username,n=200){
   invisible(df)
 }
 
+# --------------------- #
+# あらびきさんの関数
+# --------------------- #
 
+removeScreenName <- function(text, strict = TRUE) {
+  if (strict) {
+    # Twitter で screen_name と見なされるものを抽出できるはず
+    regex <- "(?<!\\w)[@＠](?>\\w+)(?![@＠])"
+  } else {
+    # 例えば hoge@example.com などメールアドレスにもマッチする
+    regex <- "[@＠]\\w+"
+  }
+  gsub(regex, "", text, perl = TRUE)
+}
+
+removeURL <- function(text, strict = TRUE) {
+  if (strict) {
+    # 手前に英数字とかがなくて、間にbasic認証があるかもしれなくて（ちなみにTwitterだとURLとみなされない）
+    # 有効なドメイン名で・・・という文字列を取り除く
+    regex <- "(?<![-.\\w#@=!'\"/])https?://(?:[^:]+:.+@)?(?:[0-9A-Za-z][-0-9A-Za-z]*(?<!-)\\.)+[A-za-z]+(?:/[-\\w#%=+,.?!&~]*)*"
+  } else {
+    regex <- "https?://[-\\w#%=+,.?!&~/]+"
+  }
+  gsub(regex, "", text, perl = TRUE)
+}
+
+removeSpecialStr <- function(text) {
+  removeURL(removeScreenName(text))
+}
